@@ -97,8 +97,12 @@ def calculate_gradient_pbl(
     # Loop over time to find the sharpest negative gradient
     pbl_heights = []
 
+    # Compute the (possibly dask-backed) smoothed field once; indexing it lazily
+    # inside the loop rebuilds and recomputes the rolling mean per time step.
+    smoothed_values = smoothed.transpose("time", dis_parm, ...).values
+
     for t in range(len(ds["time"].values)):
-        profile = smoothed.isel(time=t).values  # 1D backscatter profile
+        profile = smoothed_values[t]  # 1D backscatter profile
 
         # Compute first derivative
         p_grad = np.gradient(profile, height)
@@ -202,8 +206,12 @@ def calculate_modified_gradient_pbl(
     # Loop over time to get peaks in second derivative
     pbl_heights = []
 
+    # Compute the (possibly dask-backed) smoothed field once; indexing it lazily
+    # inside the loop rebuilds and recomputes the rolling mean per time step.
+    smoothed_values = smoothed.transpose("time", dis_parm, ...).values
+
     for t in range(len(ds["time"].values)):
-        profile = smoothed.isel(time=t).values  # 1D backscatter profile
+        profile = smoothed_values[t]  # 1D backscatter profile
 
         # Compute first and second derivatives
         d1 = np.gradient(profile, height)
